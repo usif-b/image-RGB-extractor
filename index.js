@@ -1,5 +1,7 @@
 const fileInput = document.getElementById('fileInput')
 fileInput.addEventListener('change', (e) => {
+    const listDiv = document.getElementById('colorBlocks')
+    listDiv.innerHTML = ''
     const file = fileInput.files[0]
     if(file){
         const reader = new FileReader()
@@ -21,28 +23,44 @@ fileInput.addEventListener('change', (e) => {
                 structuredData = []
 
                 for(let i = 0; i<data.length; i+=4){
-                    structuredData.push(`rgb(${data[i]}, ${data[i+1]}, ${data[i+2]})`)
+                    structuredData.push([data[i], data[i+1], data[i+2]])
                 }
                 
-                const countedData = structuredData.reduce((acc, color) => {
-                    if(acc[color]){
-                        acc[color]++
-                    }
-                    else{
-                        acc[color] = 1
-                    }
-                    return acc
-                }, {})
-                const sortedData = Object.entries(countedData).sort((a, b) => b[1] - a[1])
-                const listDiv = document.getElementById('colorBlocks')
+                const threshold = 50
+                const distinctColors = []
 
-                for(let i = 0; i<sortedData.length; i++){
+                for(let i = 0; i<structuredData.length; i++){
+                    let color = structuredData[i]
+                    let isDistinct = true
+                    for(let j = 0; j<distinctColors.length;j++){
+                        let distinctColor = distinctColors[j]
+                        let distance = Math.sqrt(
+                            Math.pow(color[0] - distinctColor[0], 2) +
+                            Math.pow(color[1] - distinctColor[1], 2) +
+                            Math.pow(color[2] - distinctColor[2], 2)
+                        )
+                        if(distance<threshold){
+                            isDistinct = false
+                        }
+                    }
+                    if(isDistinct){
+                        distinctColors.push(color)
+                    }
+                }
+                for(let i = 0; i<distinctColors.length; i++){
+                    let blockDiv = document.createElement('div')
+                    blockDiv.className = 'colorBlock'
+                    blockDiv.style.backgroundColor = `rgb(${distinctColors[i][0]},${distinctColors[i][1]},${distinctColors[i][2]})`
+                    let rgbText = document.createElement('p')
+                    rgbText.innerHTML = `${distinctColors[i][0]},${distinctColors[i][1]},${distinctColors[i][2]}`
                     let div = document.createElement('div')
-                    div.className = 'colorBlock'
-                    div.style.backgroundColor = sortedData[i][0]
+                    div.append(rgbText)
+                    div.append(blockDiv)
+                    div.className = 'fullBlock'
+                    console.log(div.style.backgroundColor)
                     listDiv.appendChild(div)
                 }
-
+                console.log(distinctColors)
             }
         }
 
